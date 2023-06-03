@@ -1,9 +1,13 @@
 package ru.netology.mycloudstorage.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -22,7 +26,14 @@ import ru.netology.mycloudstorage.modele.Role;
 @EnableGlobalMethodSecurity(prePostEnabled = true)// дает возможность воспользоваться @PreAuthorize
 
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-//мэмори сторадж хранит наших пользователей
+    private final UserDetailsService userDetailsService;
+
+    @Autowired
+    public SecurityConfig(@Qualifier("userDatailsServiceImpl") UserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
+
+    //мэмори сторадж хранит наших пользователей
     //гранд ассорити хранит данные о правах пользователей
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -46,28 +57,41 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 
     }
-// Добавили пользователей в систкму
-    //
-    @Bean
+
     @Override
-    protected UserDetailsService userDetailsService() {
-        return new InMemoryUserDetailsManager(
-                User.builder()
-                        .username("admin")
-                        .password(passwordEncoder().encode("admin")) // закодирует в $2a$04$cHv484BkdxUkZPf20ypWDuU7OJ7PViWobT5ZkNfhJm17XjhCwjG1C
-                        .authorities(Role.ADMIN.getAuthorities())
-                        .build(),
-                User.builder()
-                        .username("user")
-                        .password(passwordEncoder().encode("user")) // закодирует в $2a$04$i34azfc6tZ2B8X1ZrZ8.peCjNc1.opU0VLu4zf2fdrCqL8IyvYgg.
-                        .authorities(Role.USER.getAuthorities())
-                        .build()
-        );
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(daoAuthenticationProvider());
     }
+    // Добавили пользователей в систкму
+    //
+ ///   @Bean
+ ///   @Override
+ ///   protected UserDetailsService userDetailsService() {
+ ///       return new InMemoryUserDetailsManager(
+ ///               User.builder()
+ ///                       .username("admin")
+ ///                       .password(passwordEncoder().encode("admin")) // закодирует в $2a$04$cHv484BkdxUkZPf20ypWDuU7OJ7PViWobT5ZkNfhJm17XjhCwjG1C
+ ///                       .authorities(Role.ADMIN.getAuthorities())
+ ///                       .build(),
+ ///               User.builder()
+ ///                       .username("user")
+ ///                       .password(passwordEncoder().encode("user")) // закодирует в $2a$04$i34azfc6tZ2B8X1ZrZ8.peCjNc1.opU0VLu4zf2fdrCqL8IyvYgg.
+ ///                       .authorities(Role.USER.getAuthorities())
+ ///                       .build()
+ ///       );
+ ///   }
 
     //для кодирования пароля
     @Bean
     protected PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder(4);
+    }
+
+    @Bean
+    protected DaoAuthenticationProvider daoAuthenticationProvider(){
+        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
+        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+        daoAuthenticationProvider.setUserDetailsService(userDetailsService);
+        return daoAuthenticationProvider;
     }
 }

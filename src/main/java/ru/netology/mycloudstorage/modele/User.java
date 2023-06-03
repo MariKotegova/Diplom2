@@ -18,8 +18,8 @@ public class User {
     @Column(name = "role")
     private Role role;
     @Enumerated(value = EnumType.STRING)
-    @Column(name = "statusn")
-    private String status;
+    @Column(name = "status")
+    private Status status;
 
 
 }
