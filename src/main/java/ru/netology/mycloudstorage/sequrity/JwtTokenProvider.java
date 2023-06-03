@@ -46,13 +46,13 @@ public class JwtTokenProvider {
         Claims claims = Jwts.claims().setSubject(username);
         claims.put("role", role);
         Date now = new Date();
-        Date validiti = new Date(now.getTime() + validitySeconds * 1000);//переводим в секунды
+        Date validiti = new Date(now.getTime() + validitySeconds + 1000);//переводим в секунды
 
 return Jwts.builder()
         .setClaims(claims)
         .setIssuedAt(now)
         .setExpiration(validiti)
-        .signWith(SignatureAlgorithm.ES256, secret)
+        .signWith(SignatureAlgorithm.HS256, secret)
         .compact();
     }
 

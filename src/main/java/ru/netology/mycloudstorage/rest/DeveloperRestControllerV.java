@@ -12,8 +12,8 @@ import java.util.stream.Stream;
 @RequestMapping("/")
 public class DeveloperRestControllerV {
     private List<Developer> DEVEL = Stream.of(
-            new Developer(1L, "test", "testp"),
-            new Developer(2L, "test1", "testp1")
+            new Developer(1, "test", "testp"),
+            new Developer(2, "test1", "testp1")
     ).collect(Collectors.toList());
 //вернет весь список
     @GetMapping

@@ -26,11 +26,13 @@ public class JwtTokenFilter extends GenericFilterBean {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         String token = jwtTokenProvider.resolveToken((HttpServletRequest) servletRequest);
+        System.out.println(" doFilter tok " + token);
         try {
             //если токен есть и он валидный то аутентифицируемся
 
-            if (token != null & jwtTokenProvider.validateToken(token)) {
+            if (token != null && jwtTokenProvider.validateToken(token)) {
                 Authentication authentication = jwtTokenProvider.getAuthentication(token);
+                System.out.println(" doFilter au " + authentication);
                 //если аутентификация есть то секюрити контекст холдер возьми эту идентификацию и положи в себя
                 if (authentication != null) {
                     SecurityContextHolder.getContext().setAuthentication(authentication);

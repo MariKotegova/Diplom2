@@ -11,6 +11,7 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.netology.mycloudstorage.modele.AuthToken;
 import ru.netology.mycloudstorage.modele.User;
 import ru.netology.mycloudstorage.repositopy.UserRepository;
 import ru.netology.mycloudstorage.sequrity.JwtTokenProvider;
@@ -21,11 +22,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/")
+//@RequestMapping("")
 public class AuthenticationRestController {
     private final AuthenticationManager authenticationManager;
-    private final UserRepository userRepository;
-    private final JwtTokenProvider jwtTokenProvider;
+    private UserRepository userRepository;
+    private JwtTokenProvider jwtTokenProvider;
 
     public AuthenticationRestController(AuthenticationManager authenticationManager, UserRepository userRepository, JwtTokenProvider jwtTokenProvider) {
         this.authenticationManager = authenticationManager;
@@ -39,14 +40,15 @@ public class AuthenticationRestController {
 
         try {
             String login = authenticationRequestDTO.getLogin();
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationRequestDTO.getLogin(), authenticationRequestDTO.getPasswopd()));
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationRequestDTO.getLogin(), authenticationRequestDTO.getPassword()));
             //если не найдешь пользователя по логину и паролю дай мне исключение
             User user = userRepository.findByLogin(authenticationRequestDTO.getLogin()).orElseThrow(() -> new UsernameNotFoundException("пользователь не найден"));
         //если нашел создай токен
             String token = jwtTokenProvider.createToken(authenticationRequestDTO.getLogin(), user.getRole().name());
             System.out.println(token);
+            AuthToken authToken = new AuthToken(token);
             Map<Object, Object> response = new HashMap<>();
-            response.put("auth-token", token);
+            response.put("auth-token", authToken.getAuthToken());
             return ResponseEntity.ok(response);
 
         }catch (AuthenticationException ex){
