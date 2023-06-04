@@ -6,13 +6,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import ru.netology.mycloudstorage.modele.AuthToken;
+import ru.netology.mycloudstorage.modele.MyToken;
 import ru.netology.mycloudstorage.modele.User;
+import ru.netology.mycloudstorage.repositopy.TokenRepositiry;
 import ru.netology.mycloudstorage.repositopy.UserRepository;
 import ru.netology.mycloudstorage.sequrity.JwtTokenProvider;
 
@@ -27,12 +26,19 @@ public class AuthenticationRestController {
     private final AuthenticationManager authenticationManager;
     private UserRepository userRepository;
     private JwtTokenProvider jwtTokenProvider;
+    private TokenRepositiry tokenRepositiry;
 
-    public AuthenticationRestController(AuthenticationManager authenticationManager, UserRepository userRepository, JwtTokenProvider jwtTokenProvider) {
+
+    public AuthenticationRestController(AuthenticationManager authenticationManager,
+                                        UserRepository userRepository,
+                                        JwtTokenProvider jwtTokenProvider,
+                                        TokenRepositiry tokenRepositiry
+                                           ) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
-    }
+        this.tokenRepositiry = tokenRepositiry;
+                   }
 
 
     @PostMapping("/login")
@@ -47,6 +53,8 @@ public class AuthenticationRestController {
             String token = jwtTokenProvider.createToken(authenticationRequestDTO.getLogin(), user.getRole().name());
             System.out.println(token);
             AuthToken authToken = new AuthToken(token);
+            //сщхраняем токен в бд
+            tokenRepositiry.save(MyToken.builder().token(token).build());
             Map<Object, Object> response = new HashMap<>();
             response.put("auth-token", authToken.getAuthToken());
             return ResponseEntity.ok(response);
@@ -57,10 +65,19 @@ public class AuthenticationRestController {
     }
 
     @PostMapping("/logout")
-    public void logout(HttpServletResponse response, HttpServletRequest request) {
+    public ResponseEntity logout(HttpServletResponse response, HttpServletRequest request) {
 
     SecurityContextLogoutHandler securityCotextLogoutHandler = new SecurityContextLogoutHandler();
     securityCotextLogoutHandler.logout(request, response, null);
+    //ДАЛИТЬ ТОКЕН ИЗ БД добавить метод
+        return ResponseEntity.ok("Success logout");
+    }
+
+    @GetMapping("/list")
+    public void getAllFileNames(@RequestParam("auth-token") String token,
+                                             @RequestParam("limit") Integer limit) {
+        System.out.println("rrrrr" + token);
+        //return service.getAllFileNames(token, limit);
     }
 
 }
